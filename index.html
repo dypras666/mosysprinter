@@ -6,51 +6,57 @@
    <title>Template Desainer Print Thermal</title>
    <script src="https://cdn.tailwindcss.com"></script>
    <style>
-       /* Define exact pixel widths for thermal paper sizes */
-       .preview-58mm {
-           width: 219px; /* 58mm at 96dpi */
-           min-height: 415px; /* 110mm at 96dpi */
-           max-width: 219px;
-       }
-       .preview-80mm {
-           width: 302px; /* 80mm at 96dpi */
-           min-height: 415px;
-           max-width: 302px;
-       }
-       .receipt-preview {
-           background-color: white;
-           padding: 10px;
-           font-family: 'Courier New', monospace;
-           overflow: hidden;
-           font-size: 12px;
-           line-height: 1.2;
-       }
-       .draggable-item {
-           cursor: move;
-           border: 1px dashed transparent;
-           white-space: pre;
-           width: 100%;
-           overflow: hidden;
-       }
-       .draggable-item:hover {
-           border: 1px dashed #ccc;
-       }
-       .selected {
-           border: 1px dashed #4299e1 !important;
-       }
-       .editable-content {
-           width: 100%;
-           min-height: 20px;
-           overflow: hidden;
-       }
-       /* Fix textarea width in properties panel */
-       #properties-content textarea {
-           width: 100%;
-           max-width: 100%;
-           font-family: 'Courier New', monospace;
-           font-size: 12px;
-       }
-   </style>
+    /* Define exact pixel widths for thermal paper sizes */
+    .preview-58mm {
+        width: 219px; /* 58mm at 96dpi */
+        min-height: 415px; /* 110mm at 96dpi */
+        max-width: 219px;
+    }
+    .preview-80mm {
+        width: 302px; /* 80mm at 96dpi */
+        min-height: 415px;
+        max-width: 302px;
+    }
+    .receipt-preview {
+        background-color: white;
+        padding: 5px 10px; /* Reduced padding */
+        font-family: 'Courier New', monospace;
+        overflow: hidden;
+        font-size: 12px;
+        line-height: 1.1; /* Reduced line height */
+    }
+    .draggable-item {
+        cursor: move;
+        border: 1px dashed transparent;
+        white-space: pre;
+        width: 100%;
+        overflow: hidden;
+        padding: 0; /* Remove padding from items */
+        margin: 0; /* Remove margin from items */
+    }
+    .draggable-item:hover {
+        border: 1px dashed #ccc;
+    }
+    .selected {
+        border: 1px dashed #4299e1 !important;
+    }
+    .editable-content {
+        width: 100%;
+        min-height: 16px; /* Reduced height */
+        overflow: hidden;
+        padding: 0; /* Remove padding */
+        margin: 0; /* Remove margin */
+    }
+    /* Dividers should be very thin */
+    .draggable-item[data-type="divider"] {
+        padding: 0;
+        margin: 1px 0; /* Very minimal margin */
+    }
+    .draggable-item[data-type="divider"] hr {
+        margin: 0;
+        padding: 0;
+    }
+</style>
 </head>
 <body class="bg-gray-100 min-h-screen">
    <div class="container mx-auto px-4 py-8">
