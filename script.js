@@ -387,22 +387,22 @@ function renderTemplate() {
             case 'text':
             case 'header':
                 const boldClass = element.properties.bold ? 'font-bold' : '';
-                const headerClass = element.type === 'header' ? 'text-lg' : '';
-                elementHtml = `<div id="${element.id}" class="draggable-item ${boldClass} ${headerClass}" data-type="${element.type}">
+                elementHtml = `<div id="${element.id}" class="draggable-item ${boldClass}" data-type="${element.type}">
                     <div class="editable-content">${element.properties.content}</div>
                 </div>`;
                 break;
                 
             case 'divider':
                 elementHtml = `<div id="${element.id}" class="draggable-item" data-type="divider">
-                    <hr class="border-${element.properties.style} border-gray-400" style="margin:0;padding:0;">
+                    <hr class="border-${element.properties.style} border-gray-400">
                 </div>`;
                 break;
                 
             case 'variable':
             case 'product-row':
             case 'total-row':
-                elementHtml = `<div id="${element.id}" class="draggable-item" data-type="${element.type}">
+                const rowBoldClass = element.properties.bold ? 'font-bold' : '';
+                elementHtml = `<div id="${element.id}" class="draggable-item ${rowBoldClass}" data-type="${element.type}">
                     <div class="editable-content">${element.properties.content}</div>
                 </div>`;
                 break;
