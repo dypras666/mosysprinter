@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('size-58mm').addEventListener('click', function() {
         switchTemplate('58mm');
     });
+
+    
     
     document.getElementById('size-80mm').addEventListener('click', function() {
         switchTemplate('80mm');
@@ -27,6 +29,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load initial template (58mm)
     loadTemplate58mm();
+
+    setupUploadTemplate();
     
     // Click outside to deselect
     document.addEventListener('click', function(e) {
@@ -46,6 +50,57 @@ function calculateCharacterWidth() {
     // Store these values for reference when creating templates
     window.charWidth58mm = charWidth58mm;
     window.charWidth80mm = charWidth80mm;
+}
+
+// Upload template function
+function setupUploadTemplate() {
+    const uploadInput = document.getElementById('upload-template');
+    
+    uploadInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const templateData = JSON.parse(e.target.result);
+                
+                // Validate template format
+                if (!templateData.paperSize || !templateData.elements || !Array.isArray(templateData.elements)) {
+                    alert('Invalid template format!');
+                    return;
+                }
+                
+                // Switch to correct paper size
+                switchTemplate(templateData.paperSize);
+                
+                // Reset counter
+                idCounter = 1;
+                
+                // Load template elements
+                templateElements = [];
+                templateData.elements.forEach(element => {
+                    const id = 'element-' + (idCounter++);
+                    templateElements.push({
+                        id: id,
+                        type: element.type,
+                        properties: { ...element.properties }
+                    });
+                });
+                
+                // Render template
+                renderTemplate();
+                
+                // Reset file input
+                uploadInput.value = '';
+                
+            } catch(error) {
+                console.error('Error loading template:', error);
+                alert('Error loading template: ' + error.message);
+            }
+        };
+        reader.readAsText(file);
+    });
 }
 
 
@@ -87,21 +142,21 @@ function loadTemplate58mm() {
         {
             type: 'header',
             properties: {
-                content: '           NAMA TOKO           ',
+                content: '  {toko.nama_bisnis}  ',
                 bold: true
             }
         },
         {
             type: 'text',
             properties: {
-                content: '     Jl. Contoh No. 123, Jakarta     ',
+                content: ' {toko.alamat}  ',
                 bold: false
             }
         },
         {
             type: 'text',
             properties: {
-                content: '        Telp: 021-1234567        ',
+                content: '  {toko.no_telp}   ',
                 bold: false
             }
         },
@@ -229,21 +284,21 @@ function loadTemplate80mm() {
         {
             type: 'header',
             properties: {
-                content: '                     NAMA TOKO                     ',
+                content: '                     {toko.nama_bisnis}                     ',
                 bold: true
             }
         },
         {
             type: 'text',
             properties: {
-                content: '               Jl. Contoh No. 123, Jakarta               ',
+                content: '                     {toko.alamat}                     ',
                 bold: false
             }
         },
         {
             type: 'text',
             properties: {
-                content: '                  Telp: 021-1234567                  ',
+                content: '                  {toko.no_telp}                  ',
                 bold: false
             }
         },
@@ -386,8 +441,8 @@ function renderTemplate() {
         switch(element.type) {
             case 'text':
             case 'header':
-                const boldClass = element.properties.bold ? 'font-bold' : '';
-                elementHtml = `<div id="${element.id}" class="draggable-item ${boldClass}" data-type="${element.type}">
+                // Change 'html =' to 'elementHtml ='
+                elementHtml = `<div id="${element.id}" class="draggable-item ${element.properties.bold ? 'font-bold' : ''}" data-type="${element.type}">
                     <div class="editable-content">${element.properties.content}</div>
                 </div>`;
                 break;
@@ -677,10 +732,10 @@ function addElement(type) {
                 bold: false
             };
             break;
-            
+             
         case 'header':
             elementData.properties = {
-                content: 'HEADER TEXT',
+                content: '{toko.nama_bisnis}',
                 bold: true
             };
             break;
