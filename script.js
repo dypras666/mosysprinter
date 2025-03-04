@@ -34,7 +34,19 @@ document.addEventListener('DOMContentLoaded', function() {
             deselectAll();
         }
     });
+     calculateCharacterWidth();
 });
+
+function calculateCharacterWidth() {
+    // For 58mm printers, typically 32 characters per line (depends on the printer model)
+    const charWidth58mm = 32;
+    // For 80mm printers, typically 48 characters per line
+    const charWidth80mm = 48;
+    
+    // Store these values for reference when creating templates
+    window.charWidth58mm = charWidth58mm;
+    window.charWidth80mm = charWidth80mm;
+}
 
 // Switch template between 58mm and 80mm
 function switchTemplate(size) {
