@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thermal Printer Template Designer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Preview sizes */
+        .preview-58mm {
+            width: 219px; /* 58mm in pixels (at 96dpi) */
+        }
+        .preview-80mm {
+            width: 302px; /* 80mm in pixels (at 96dpi) */
+        }
+        .receipt-preview {
+            background-color: white;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+        .draggable-item {
+            cursor: move;
+            border: 1px dashed transparent;
+        }
+        .draggable-item:hover {
+            border: 1px dashed #ccc;
+        }
+        .selected {
+            border: 1px dashed #4299e1 !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-2xl font-bold mb-6 text-center">Template Desainer Print Thermal</h1>
+        
+        <div class="flex flex-wrap md:flex-nowrap gap-4">
+            <!-- Left Panel: Design Tools -->
+            <div class="w-full md:w-1/3 bg-white p-4 rounded shadow">
+                <h2 class="text-lg font-semibold mb-4">Komponen</h2>
+                
+                <!-- Paper Size Selection -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Ukuran Kertas</label>
+                    <div class="flex gap-2">
+                        <button id="size-58mm" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 active">58mm</button>
+                        <button id="size-80mm" class="bg-gray-300 text-gray-800 px-3 py-1 rounded hover:bg-gray-400">80mm</button>
+                    </div>
+                </div>
+                
+                <!-- Add Elements -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tambah Elemen</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button class="add-element bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-sm" data-type="text">Text</button>
+                        <button class="add-element bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-sm" data-type="header">Header</button>
+                        <button class="add-element bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-sm" data-type="divider">Divider</button>
+                        <button class="add-element bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-sm" data-type="variable">Variable</button>
+                        <button class="add-element bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-sm" data-type="product-row">Product Row</button>
+                        <button class="add-element bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-sm" data-type="total-row">Total Row</button>
+                    </div>
+                </div>
+                
+                <!-- Properties Panel -->
+                <div id="properties-panel" class="mb-4 hidden">
+                    <h3 class="text-md font-medium mb-2">Properties</h3>
+                    <div id="properties-content">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Template Actions -->
+                <div class="mt-6">
+                    <button id="download-template" class="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Download Template (JSON)</button>
+                </div>
+            </div>
+            
+            <!-- Right Panel: Preview -->
+            <div class="w-full md:w-2/3">
+                <div class="bg-white p-4 rounded shadow">
+                    <h2 class="text-lg font-semibold mb-4">Preview</h2>
+                    <div class="flex justify-center">
+                        <div id="receipt-preview" class="receipt-preview preview-58mm border shadow">
+                            <!-- Template content will go here -->
+                            <div id="template-container" class="min-h-[400px]">
+                                <!-- Template elements will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Template Data Example -->
+                <div class="mt-4 bg-white p-4 rounded shadow">
+                    <h2 class="text-lg font-semibold mb-2">Data Sample</h2>
+                    <div class="text-sm bg-gray-100 p-2 rounded overflow-auto max-h-40">
+                        <pre id="data-sample">{
+  "toko": {
+    "nama_bisnis": "Toko Sample",
+    "alamat": "Jl. Contoh No. 123",
+    "printer": "POS-58",
+    "company_about": "TOKO SAMPLE",
+    "company_address": "Jl. Contoh No. 123, Jakarta",
+    "company_phone": "Telp: 021-1234567"
+  },
+  "nota": {
+    "kasir": "Admin",
+    "customer": "Umum",
+    "kode": "INV-001",
+    "tanggal": "01-03-2025",
+    "jumlah_harga": 150000,
+    "jumlah_diskon": 5000,
+    "sub_total": 145000,
+    "jumlah_bayar": 150000,
+    "jumlah_kembali": 5000
+  },
+  "produk": [
+    {
+      "produk": "Produk Contoh 1",
+      "qty": 2,
+      "satuan": "pcs",
+      "harga": 50000,
+      "jumlah_harga": 100000,
+      "diskon": 0
+    },
+    {
+      "produk": "Produk Contoh 2",
+      "qty": 1,
+      "satuan": "pcs",
+      "harga": 50000,
+      "jumlah_harga": 50000,
+      "diskon": 5000
+    }
+  ]
+}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentPaperSize = '58mm';
+        let selectedElement = null;
+        let templateElements = [];
+        let idCounter = 0;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Paper size selection
+            document.getElementById('size-58mm').addEventListener('click', function() {
+                setPaperSize('58mm');
+            });
+            
+            document.getElementById('size-80mm').addEventListener('click', function() {
+                setPaperSize('80mm');
+            });
+            
+            // Add element buttons
+            document.querySelectorAll('.add-element').forEach(button => {
+                button.addEventListener('click', function() {
+                    addElement(this.getAttribute('data-type'));
+                });
+            });
+            
+            // Download template button
+            document.getElementById('download-template').addEventListener('click', downloadTemplate);
+        });
+        
+        // Set paper size
+        function setPaperSize(size) {
+            currentPaperSize = size;
+            
+            const preview = document.getElementById('receipt-preview');
+            preview.classList.remove('preview-58mm', 'preview-80mm');
+            preview.classList.add(`preview-${size}`);
+            
+            // Update size buttons
+            document.getElementById('size-58mm').classList.remove('bg-blue-500', 'text-white', 'bg-gray-300', 'text-gray-800');
+            document.getElementById('size-80mm').classList.remove('bg-blue-500', 'text-white', 'bg-gray-300', 'text-gray-800');
+            
+            if (size === '58mm') {
+                document.getElementById('size-58mm').classList.add('bg-blue-500', 'text-white');
+                document.getElementById('size-80mm').classList.add('bg-gray-300', 'text-gray-800');
+            } else {
+                document.getElementById('size-58mm').classList.add('bg-gray-300', 'text-gray-800');
+                document.getElementById('size-80mm').classList.add('bg-blue-500', 'text-white');
+            }
+        }
+        
+        // Add element to template
+        function addElement(type) {
+            const id = 'element-' + (idCounter++);
+            const container = document.getElementById('template-container');
+            
+            let elementHtml = '';
+            let elementData = {
+                id: id,
+                type: type,
+                properties: {}
+            };
+            
+            switch(type) {
+                case 'text':
+                    elementHtml = `<div id="${id}" class="draggable-item p-1 text-center" data-type="text">Sample Text</div>`;
+                    elementData.properties = {
+                        text: 'Sample Text',
+                        align: 'center',
+                        bold: false,
+                        size: 'normal'
+                    };
+                    break;
+                    
+                case 'header':
+                    elementHtml = `<div id="${id}" class="draggable-item p-1 text-center font-bold text-lg" data-type="header">HEADER TEXT</div>`;
+                    elementData.properties = {
+                        text: 'HEADER TEXT',
+                        align: 'center',
+                        bold: true,
+                        size: 'large'
+                    };
+                    break;
+                    
+                case 'divider':
+                    elementHtml = `<div id="${id}" class="draggable-item py-1" data-type="divider"><hr class="border-dashed border-gray-400"></div>`;
+                    elementData.properties = {
+                        style: 'dashed'
+                    };
+                    break;
+                    
+                case 'variable':
+                    elementHtml = `<div id="${id}" class="draggable-item p-1 flex" data-type="variable">
+                        <span class="font-medium">Label:</span>
+                        <span class="ml-1 text-blue-600">{data.variable}</span>
+                    </div>`;
+                    elementData.properties = {
+                        label: 'Label:',
+                        variable: 'data.variable',
+                        showLabel: true
+                    };
+                    break;
+                    
+                case 'product-row':
+                    elementHtml = `<div id="${id}" class="draggable-item p-1" data-type="product-row">
+                        <div class="font-medium">{product.name}</div>
+                        <div class="flex justify-between text-sm">
+                            <span>{product.qty} {product.unit} x {product.price}</span>
+                            <span>{product.total}</span>
+                        </div>
+                    </div>`;
+                    elementData.properties = {
+                        format: 'standard',
+                        showDiscount: true
+                    };
+                    break;
+                    
+                case 'total-row':
+                    elementHtml = `<div id="${id}" class="draggable-item p-1 flex justify-between" data-type="total-row">
+                        <span>Total:</span>
+                        <span>{total}</span>
+                    </div>`;
+                    elementData.properties = {
+                        label: 'Total:',
+                        variable: 'total',
+                        bold: false
+                    };
+                    break;
+            }
+            
+            // Add to DOM
+            container.insertAdjacentHTML('beforeend', elementHtml);
+            
+            // Add to template data
+            templateElements.push(elementData);
+            
+            // Add event listeners
+            const newElement = document.getElementById(id);
+            newElement.addEventListener('click', function(e) {
+                e.stopPropagation();
+                selectElement(id);
+            });
+            
+            // Make draggable
+            makeDraggable(newElement);
+            
+            // Select the new element
+            selectElement(id);
+        }
+        
+        // Make element draggable
+        function makeDraggable(element) {
+            element.draggable = true;
+            
+            element.addEventListener('dragstart', function(e) {
+                e.dataTransfer.setData('text/plain', element.id);
+                setTimeout(() => {
+                    element.classList.add('opacity-50');
+                }, 0);
+            });
+            
+            element.addEventListener('dragend', function() {
+                element.classList.remove('opacity-50');
+            });
+            
+            const container = document.getElementById('template-container');
+            
+            container.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(container, e.clientY);
+                const draggable = document.querySelector('.draggable-item.opacity-50');
+                if (afterElement == null) {
+                    container.appendChild(draggable);
+                } else {
+                    container.insertBefore(draggable, afterElement);
+                }
+                
+                // Update template data order
+                updateTemplateOrder();
+            });
+        }
+        
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.draggable-item:not(.opacity-50)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+        
+        // Update template elements order based on DOM
+        function updateTemplateOrder() {
+            const orderedElements = [];
+            const domElements = document.querySelectorAll('.draggable-item');
+            
+            domElements.forEach(element => {
+                const id = element.id;
+                const found = templateElements.find(item => item.id === id);
+                if (found) {
+                    orderedElements.push(found);
+                }
+            });
+            
+            templateElements = orderedElements;
+        }
+        
+        // Select element and show properties
+        function selectElement(id) {
+            // Deselect previous
+            if (selectedElement) {
+                document.getElementById(selectedElement).classList.remove('selected');
+            }
+            
+            // Select new
+            selectedElement = id;
+            document.getElementById(id).classList.add('selected');
+            
+            // Show properties panel
+            showProperties(id);
+        }
+        
+        // Show properties panel for element
+        function showProperties(id) {
+            const element = templateElements.find(item => item.id === id);
+            if (!element) return;
+            
+            const panel = document.getElementById('properties-panel');
+            const content = document.getElementById('properties-content');
+            
+            panel.classList.remove('hidden');
+            content.innerHTML = '';
+            
+            // Create properties form based on element type
+            let html = '';
+            
+            switch(element.type) {
+                case 'text':
+                case 'header':
+                    html = `
+                        <div class="mb-2">
+                            <label class="block text-xs mb-1">Text</label>
+                            <input type="text" class="property-input w-full border rounded px-2 py-1 text-sm" 
+                                   data-property="text" value="${element.properties.text}">
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-xs mb-1">Alignment</label>
+                            <select class="property-input w-full border rounded px-2 py-1 text-sm" data-property="align">
+                                <option value="left" ${element.properties.align === 'left' ? 'selected' : ''}>Left</option>
+                                <option value="center" ${element.properties.align === 'center' ? 'selected' : ''}>Center</option>
+                                <option value="right" ${element.properties.align === 'right' ? 'selected' : ''}>Right</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-xs mb-1">Size</label>
+                            <select class="property-input w-full border rounded px-2 py-1 text-sm" data-property="size">
+                                <option value="small" ${element.properties.size === 'small' ? 'selected' : ''}>Small</option>
+                                <option value="normal" ${element.properties.size === 'normal' ? 'selected' : ''}>Normal</option>
+                                <option value="large" ${element.properties.size === 'large' ? 'selected' : ''}>Large</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="flex items-center text-xs">
+                                <input type="checkbox" class="property-input mr-1" data-property="bold" 
+                                       ${element.properties.bold ? 'checked' : ''}>
+                                Bold
+                            </label>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'divider':
+                    html = `
+                        <div class="mb-2">
+                            <label class="block text-xs mb-1">Style</label>
+                            <select class="property-input w-full border rounded px-2 py-1 text-sm" data-property="style">
+                                <option value="solid" ${element.properties.style === 'solid' ? 'selected' : ''}>Solid</option>
+                                <option value="dashed" ${element.properties.style === 'dashed' ? 'selected' : ''}>Dashed</option>
+                                <option value="dotted" ${element.properties.style === 'dotted' ? 'selected' : ''}>Dotted</option>
+                            </select>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'variable':
+                    html = `
+                        <div class="mb-2">
+                            <label class="block text-xs mb-1">Label</label>
+                            <input type="text" class="property-input w-full border rounded px-2 py-1 text-sm" 
+                                   data-property="label" value="${element.properties.label}">
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-xs mb-1">Variable</label>
+                            <select class="property-input w-full border rounded px-2 py-1 text-sm" data-property="variable">
+                                <option value="nota.kode" ${element.properties.variable === 'nota.kode' ? 'selected' : ''}>Nomor Nota</option>
+                                <option value="nota.kasir" ${element.properties.variable === 'nota.kasir' ? 'selected' : ''}>Kasir</option>
+                                <option value="nota.customer" ${element.properties.variable === 'nota.customer' ? 'selected' : ''}>Customer</option>
+                                <option value="nota.tanggal" ${element.properties.variable === 'nota.tanggal' ? 'selected' : ''}>Tanggal</option>
+                                <option value="toko.nama_bisnis" ${element.properties.variable === 'toko.nama_bisnis' ? 'selected' : ''}>Nama Toko</option>
+                                <option value="toko.alamat" ${element.properties.variable === 'toko.alamat' ? 'selected' : ''}>Alamat Toko</option>
+                                <option value="toko.company_phone" ${element.properties.variable === 'toko.company_phone' ? 'selected' : ''}>Telepon Toko</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="flex items-center text-xs">
+                                <input type="checkbox" class="property-input mr-1" data-property="showLabel" 
+                                       ${element.properties.showLabel ? 'checked' : ''}>
+                                Show Label
+                            </label>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'product-row':
+                    html = `
+                        <div class="mb-2">
+                            <label class="block text-xs mb-1">Format</label>
+                            <select class="property-input w-full border rounded px-2 py-1 text-sm" data-property="format">
+                                <option value="standard" ${element.properties.format === 'standard' ? 'selected' : ''}>Standard</option>
+                                <option value="compact" ${element.properties.format === 'compact' ? 'selected' : ''}>Compact</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="flex items-center text-xs">
+                                <input type="checkbox" class="property-input mr-1" data-property="showDiscount" 
+                                       ${element.properties.showDiscount ? 'checked' : ''}>
+                                Show Discount
+                            </label>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'total-row':
+                    html = `
+                        <div class="mb-2">
+                            <label class="block text-xs mb-1">Label</label>
+                            <input type="text" class="property-input w-full border rounded px-2 py-1 text-sm" 
+                                   data-property="label" value="${element.properties.label}">
+                        </div>
+                        <div class="mb-2">
+                            <label class="block text-xs mb-1">Variable</label>
+                            <select class="property-input w-full border rounded px-2 py-1 text-sm" data-property="variable">
+                                <option value="nota.jumlah_harga" ${element.properties.variable === 'nota.jumlah_harga' ? 'selected' : ''}>Total</option>
+                                <option value="nota.jumlah_diskon" ${element.properties.variable === 'nota.jumlah_diskon' ? 'selected' : ''}>Diskon</option>
+                                <option value="nota.sub_total" ${element.properties.variable === 'nota.sub_total' ? 'selected' : ''}>Sub Total</option>
+                                <option value="nota.jumlah_bayar" ${element.properties.variable === 'nota.jumlah_bayar' ? 'selected' : ''}>Bayar</option>
+                                <option value="nota.jumlah_kembali" ${element.properties.variable === 'nota.jumlah_kembali' ? 'selected' : ''}>Kembali</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="flex items-center text-xs">
+                                <input type="checkbox" class="property-input mr-1" data-property="bold" 
+                                       ${element.properties.bold ? 'checked' : ''}>
+                                Bold
+                            </label>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            // Delete button for any element
+            html += `
+                <div class="mt-4">
+                    <button id="delete-element" class="w-full bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600">
+                        Delete Element
+                    </button>
+                </div>
+            `;
+            
+            content.innerHTML = html;
+            
+            // Add event listeners for property changes
+            content.querySelectorAll('.property-input').forEach(input => {
+                input.addEventListener('change', function() {
+                    updateElementProperty(id, this.getAttribute('data-property'), this.type === 'checkbox' ? this.checked : this.value);
+                });
+            });
+            
+            // Delete button event
+            content.querySelector('#delete-element').addEventListener('click', function() {
+                deleteElement(id);
+            });
+        }
+        
+        // Update element property
+        function updateElementProperty(id, property, value) {
+            const element = templateElements.find(item => item.id === id);
+            if (!element) return;
+            
+            element.properties[property] = value;
+            updateElementDisplay(id);
+        }
+        
+        // Update element display
+        function updateElementDisplay(id) {
+            const element = templateElements.find(item => item.id === id);
+            if (!element) return;
+            
+            const domElement = document.getElementById(id);
+            
+            switch(element.type) {
+                case 'text':
+                case 'header':
+                    domElement.textContent = element.properties.text;
+                    domElement.style.textAlign = element.properties.align;
+                    domElement.style.fontWeight = element.properties.bold ? 'bold' : 'normal';
+                    
+                    if (element.properties.size === 'small') {
+                        domElement.classList.remove('text-lg', 'text-base');
+                        domElement.classList.add('text-sm');
+                    } else if (element.properties.size === 'large') {
+                        domElement.classList.remove('text-sm', 'text-base');
+                        domElement.classList.add('text-lg');
+                    } else {
+                        domElement.classList.remove('text-sm', 'text-lg');
+                        domElement.classList.add('text-base');
+                    }
+                    break;
+                    
+                case 'divider':
+                    const hr = domElement.querySelector('hr');
+                    hr.className = ''; // Reset classes
+                    hr.classList.add(`border-${element.properties.style}`, 'border-gray-400');
+                    break;
+                    
+                case 'variable':
+                    let variableHtml = '';
+                    if (element.properties.showLabel) {
+                        variableHtml = `<span class="font-medium">${element.properties.label}</span>
+                                       <span class="ml-1 text-blue-600">{${element.properties.variable}}</span>`;
+                    } else {
+                        variableHtml = `<span class="text-blue-600">{${element.properties.variable}}</span>`;
+                    }
+                    domElement.innerHTML = variableHtml;
+                    break;
+                    
+                case 'product-row':
+                    let productHtml = '';
+                    if (element.properties.format === 'standard') {
+                        productHtml = `<div class="font-medium">{product.name}</div>
+                                      <div class="flex justify-between text-sm">
+                                          <span>{product.qty} {product.unit} x {product.price}</span>
+                                          <span>{product.total}</span>
+                                      </div>`;
+                        if (element.properties.showDiscount) {
+                            productHtml += `<div class="text-sm text-gray-600">Diskon: {product.discount}</div>`;
+                        }
+                    } else {
+                        productHtml = `<div class="flex justify-between">
+                                          <span>{product.name}</span>
+                                          <span>{product.total}</span>
+                                      </div>
+                                      <div class="text-sm text-gray-600">{product.qty} {product.unit} x {product.price}</div>`;
+                        if (element.properties.showDiscount) {
+                            productHtml += `<div class="text-sm text-gray-600">Diskon: {product.discount}</div>`;
+                        }
+                    }
+                    domElement.innerHTML = productHtml;
+                    break;
+                    
+                case 'total-row':
+                    let totalHtml = `<span>${element.properties.label}</span>
+                                   <span>{${element.properties.variable}}</span>`;
+                    domElement.innerHTML = totalHtml;
+                    domElement.style.fontWeight = element.properties.bold ? 'bold' : 'normal';
+                    break;
+            }
+        }
+        
+        // Delete element
+        function deleteElement(id) {
+            const domElement = document.getElementById(id);
+            if (domElement) {
+                domElement.remove();
+            }
+            
+            templateElements = templateElements.filter(item => item.id !== id);
+            
+            // Hide properties panel
+            document.getElementById('properties-panel').classList.add('hidden');
+            selectedElement = null;
+        }
+        
+        // Download template as JSON
+        function downloadTemplate() {
+            // Clean up template data for export
+            const exportData = {
+                paperSize: currentPaperSize,
+                elements: templateElements.map(element => {
+                    return {
+                        type: element.type,
+                        properties: element.properties
+                    };
+                })
+            };
+            
+            // Create download link
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "print-template.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+    </script>
+</body>
+</html>
