@@ -48,6 +48,7 @@ function calculateCharacterWidth() {
     window.charWidth80mm = charWidth80mm;
 }
 
+
 // Switch template between 58mm and 80mm
 function switchTemplate(size) {
     currentPaperSize = size;
@@ -79,6 +80,7 @@ function switchTemplate(size) {
 function loadTemplate58mm() {
     // Reset elements array
     templateElements = [];
+    const charWidth = 32;
     
     // Default template elements for 58mm
     const elements58mm = [
@@ -207,7 +209,7 @@ function loadTemplate58mm() {
     ];
     
     // Add all elements to the template
-    elements58mm.forEach(element => {
+     elements58mm.forEach(element => {
         const id = 'element-' + (idCounter++);
         element.id = id;
         templateElements.push(element);
@@ -373,7 +375,7 @@ function loadTemplate80mm() {
     renderTemplate();
 }
 
-// Render the template
+// Render the template 
 function renderTemplate() {
     const container = document.getElementById('template-container');
     container.innerHTML = '';
@@ -386,32 +388,21 @@ function renderTemplate() {
             case 'header':
                 const boldClass = element.properties.bold ? 'font-bold' : '';
                 const headerClass = element.type === 'header' ? 'text-lg' : '';
-                elementHtml = `<div id="${element.id}" class="draggable-item p-1 ${boldClass} ${headerClass}" data-type="${element.type}">
+                elementHtml = `<div id="${element.id}" class="draggable-item ${boldClass} ${headerClass}" data-type="${element.type}">
                     <div class="editable-content">${element.properties.content}</div>
                 </div>`;
                 break;
                 
             case 'divider':
-                elementHtml = `<div id="${element.id}" class="draggable-item py-1" data-type="divider">
-                    <hr class="border-${element.properties.style} border-gray-400">
+                elementHtml = `<div id="${element.id}" class="draggable-item" data-type="divider">
+                    <hr class="border-${element.properties.style} border-gray-400" style="margin:0;padding:0;">
                 </div>`;
                 break;
                 
             case 'variable':
-                elementHtml = `<div id="${element.id}" class="draggable-item p-1" data-type="variable">
-                    <div class="editable-content">${element.properties.content}</div>
-                </div>`;
-                break;
-                
             case 'product-row':
-                elementHtml = `<div id="${element.id}" class="draggable-item p-1" data-type="product-row">
-                    <div class="editable-content">${element.properties.content}</div>
-                </div>`;
-                break;
-                
             case 'total-row':
-                const totalBoldClass = element.properties.bold ? 'font-bold' : '';
-                elementHtml = `<div id="${element.id}" class="draggable-item p-1 ${totalBoldClass}" data-type="total-row">
+                elementHtml = `<div id="${element.id}" class="draggable-item" data-type="${element.type}">
                     <div class="editable-content">${element.properties.content}</div>
                 </div>`;
                 break;
