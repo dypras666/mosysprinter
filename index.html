@@ -17,26 +17,7 @@
         min-height: 415px;
         max-width: 302px;
     }
-    .receipt-preview {
-        background-color: white;
-        padding: 5px 10px; /* Reduced padding */
-        font-family: 'Courier New', monospace;
-        overflow: hidden;
-        font-size: 12px;
-        line-height: 1.1; /* Reduced line height */
-    }
-    .draggable-item {
-        cursor: move;
-        border: 1px dashed transparent;
-        white-space: pre;
-        width: 100%;
-        overflow: hidden;
-        padding: 0; /* Remove padding from items */
-        margin: 0; /* Remove margin from items */
-    }
-    .draggable-item:hover {
-        border: 1px dashed #ccc;
-    }
+    
     .selected {
         border: 1px dashed #4299e1 !important;
     }
@@ -56,6 +37,67 @@
         margin: 0;
         padding: 0;
     }
+
+      /* Add this to your style section */
+   .receipt-preview {
+       background-color: white;
+       padding: 5px 10px;
+       font-family: 'Courier New', monospace;
+       overflow: hidden;
+       font-size: 12px;
+       line-height: 1; /* Tighten line height */
+   }
+   
+   #template-container {
+       display: flex;
+       flex-direction: column;
+       gap: 0; /* No gap between elements */
+   }
+   
+   .draggable-item {
+       cursor: move;
+       border: 1px dashed transparent;
+       white-space: pre;
+       width: 100%;
+       overflow: hidden;
+       padding: 0 !important; /* Force no padding */
+       margin: 0 !important; /* Force no margin */
+       line-height: 1; /* Tighter line height */
+   }
+   
+   .editable-content {
+       width: 100%;
+       overflow: hidden;
+       padding: 0;
+       margin: 0;
+       line-height: 1;
+   }
+   
+   /* Make dividers extremely compact */
+   .draggable-item[data-type="divider"] {
+       height: 1px;
+       padding: 0 !important;
+       margin: 0 !important;
+       line-height: 0;
+   }
+   
+   .draggable-item[data-type="divider"] hr {
+       margin: 0;
+       padding: 0;
+       height: 1px;
+       border-width: 1px 0 0 0;
+   }
+   
+   /* Override any Tailwind spacing */
+   .p-1, .py-1, .pt-1, .pb-1 {
+       padding-top: 0 !important;
+       padding-bottom: 0 !important;
+   }
+   
+   .m-1, .my-1, .mt-1, .mb-1 {
+       margin-top: 0 !important;
+       margin-bottom: 0 !important;
+   }
 </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
